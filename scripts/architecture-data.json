@@ -1,0 +1,281 @@
+{
+  "lanes": [
+    "Student UI",
+    "Node host",
+    "SDK + Claude",
+    "Hook / Read",
+    "Private files"
+  ],
+  "arrows": [
+    [
+      0,
+      1,
+      "1. Validate source mode and classroom ID"
+    ],
+    [
+      1,
+      4,
+      "2. Resolve owned cwd, home and config paths"
+    ],
+    [
+      1,
+      4,
+      "3. Prepare non-conflicting instruction fixtures"
+    ],
+    [
+      1,
+      2,
+      "4. Choose explicit sources or omission"
+    ],
+    [
+      1,
+      2,
+      "5. Leave the property absent when omitted"
+    ],
+    [
+      1,
+      2,
+      "6. Configure memory and private context separately"
+    ],
+    [
+      1,
+      2,
+      "7. Start the same real task with selected options"
+    ],
+    [
+      2,
+      3,
+      "8. Run the loaded filesystem command hook"
+    ],
+    [
+      2,
+      1,
+      "9. Run the explicit programmatic callback"
+    ],
+    [
+      1,
+      3,
+      "10. Block tool reads of instruction files"
+    ],
+    [
+      2,
+      1,
+      "11. Preserve the actual typed result"
+    ],
+    [
+      3,
+      1,
+      "12. Read the private filesystem trace"
+    ],
+    [
+      1,
+      0,
+      "13. Format and compare independent observations"
+    ]
+  ],
+  "steps": [
+    {
+      "number": 1,
+      "title": "Validate source mode and classroom ID",
+      "source": "src/server.ts",
+      "code": "const config = validateConfig(input);",
+      "language": "typescript",
+      "explanation": "Accept only a listed source mode and Alpha/Beta ID. The browser cannot provide an arbitrary path or executable hook command.",
+      "firstLine": 52,
+      "lastLine": 52,
+      "anchors": [
+        "const config = validateConfig(input);"
+      ],
+      "sourceSHA256": "98c10bdd66c856792409476270430cc7d2ce539555af147655ee10e234f89b00",
+      "narration": "Step one. Accept only a listed source mode and Alpha/Beta ID. The browser cannot provide an arbitrary path or executable hook command. The source label identifies the corresponding application statements."
+    },
+    {
+      "number": 2,
+      "title": "Resolve owned cwd, home and config paths",
+      "source": "src/agent.ts",
+      "code": "const root = resolve(ROOT, \".runtime\",\n  config.mode, config.tenant);\nreturn { root, cwd: resolve(root, \"project\"),\n  home: resolve(root, \"home\"),\n  sdkHome: resolve(root, \"sdk-home\") };",
+      "language": "typescript",
+      "explanation": "Resolve separate classroom directories. This path factory demonstrates deliberate configuration, not OS-enforced tenant isolation.",
+      "firstLine": 20,
+      "lastLine": 21,
+      "anchors": [
+        "const root = resolve(ROOT, \".runtime\", config.mode, config.tenant);",
+        "return { root, cwd: resolve(root, \"project\"), home: resolve(root, \"home\"), sdkHome: resolve(root, \"sdk-home\") };"
+      ],
+      "sourceSHA256": "16dab81d76a3fde588835c66b4fe6138cf609251e2ce259c56f96769e1b2d971",
+      "narration": "Step two. Resolve separate classroom directories. This path factory demonstrates deliberate configuration, not OS-enforced tenant isolation. The source label identifies the corresponding application statements."
+    },
+    {
+      "number": 3,
+      "title": "Prepare non-conflicting instruction fixtures",
+      "source": "src/agent.ts",
+      "code": "for (const file of files)\n  await writeFile(file.path, file.contents);",
+      "language": "typescript",
+      "explanation": "Write trusted project, private-user and local fixtures before the query. The student sees a host-rendered file view; those file contents are not inserted into the model prompt.",
+      "firstLine": 51,
+      "lastLine": 51,
+      "anchors": [
+        "for (const file of files) await writeFile(file.path, file.contents);"
+      ],
+      "sourceSHA256": "16dab81d76a3fde588835c66b4fe6138cf609251e2ce259c56f96769e1b2d971",
+      "narration": "Step three. Write trusted project, private-user and local fixtures before the query. The student sees a host-rendered file view; those file contents are not inserted into the model prompt. The source label identifies the corresponding application statements."
+    },
+    {
+      "number": 4,
+      "title": "Choose explicit sources or omission",
+      "source": "src/agent.ts",
+      "code": "if (mode === \"defaults\") return undefined;\nif (mode === \"project\") return [\"project\"];\nif (mode === \"combined\") return [\"user\", \"project\"];\nreturn [];",
+      "language": "typescript",
+      "explanation": "Preserve the semantic difference between an omitted option and an empty list. The pinned runtime loads all three sources when the option is omitted.",
+      "firstLine": 24,
+      "lastLine": 27,
+      "anchors": [
+        "if (mode === \"defaults\") return undefined;",
+        "if (mode === \"project\") return [\"project\"];",
+        "if (mode === \"combined\") return [\"user\", \"project\"];",
+        "return [];"
+      ],
+      "sourceSHA256": "16dab81d76a3fde588835c66b4fe6138cf609251e2ce259c56f96769e1b2d971",
+      "narration": "Step four. Preserve the semantic difference between an omitted option and an empty list. The pinned runtime loads all three sources when the option is omitted. The source label identifies the corresponding application statements."
+    },
+    {
+      "number": 5,
+      "title": "Leave the property absent when omitted",
+      "source": "src/agent.ts",
+      "code": "...(selected === undefined\n  ? {} : { settingSources: selected }),",
+      "language": "typescript",
+      "explanation": "The defaults experiment truly omits settingSources. Other modes pass their selected array, including an explicit empty array.",
+      "firstLine": 65,
+      "lastLine": 65,
+      "anchors": [
+        "...(selected === undefined ? {} : { settingSources: selected }),"
+      ],
+      "sourceSHA256": "16dab81d76a3fde588835c66b4fe6138cf609251e2ce259c56f96769e1b2d971",
+      "narration": "Step five. The defaults experiment truly omits settingSources. Other modes pass their selected array, including an explicit empty array. The source label identifies the corresponding application statements."
+    },
+    {
+      "number": 6,
+      "title": "Configure memory and private context separately",
+      "source": "src/agent.ts",
+      "code": "env: { ...env,\n  HOME: dirs.home, USERPROFILE: dirs.home,\n  CLAUDE_CONFIG_DIR: dirs.sdkHome,\n  CLAUDE_CODE_DISABLE_AUTO_MEMORY: \"1\",\n  ENABLE_CLAUDEAI_MCP_SERVERS: \"false\"\n},",
+      "language": "typescript",
+      "explanation": "Source filtering does not control every input. The app explicitly relocates its config/home, disables auto memory and uses strict MCP config. Managed policy still has its own scope.",
+      "firstLine": 34,
+      "lastLine": 35,
+      "anchors": [
+        "CLAUDE_CONFIG_DIR: dirs.sdkHome, CLAUDE_CODE_DISABLE_AUTO_MEMORY: \"1\", ENABLE_CLAUDEAI_MCP_SERVERS: \"false\" },",
+        "return { cwd: dirs.cwd, env: { ...env, HOME: dirs.home, USERPROFILE: dirs.home,"
+      ],
+      "sourceSHA256": "16dab81d76a3fde588835c66b4fe6138cf609251e2ce259c56f96769e1b2d971",
+      "narration": "Step six. Source filtering does not control every input. The app explicitly relocates its config/home, disables auto memory and uses strict MCP config. Managed policy still has its own scope. The source label identifies the corresponding application statements."
+    },
+    {
+      "number": 7,
+      "title": "Start the same real task with selected options",
+      "source": "src/agent.ts",
+      "code": "const run = query({\n  prompt: PROMPTS.task, options\n});",
+      "language": "typescript",
+      "explanation": "The fixed prompt does not contain rule-marker values. The SDK loads the selected filesystem context and owns the model/tool loop.",
+      "firstLine": 100,
+      "lastLine": 100,
+      "anchors": [
+        "const run = query({ prompt: PROMPTS.task, options });"
+      ],
+      "sourceSHA256": "16dab81d76a3fde588835c66b4fe6138cf609251e2ce259c56f96769e1b2d971",
+      "narration": "Step seven. The fixed prompt does not contain rule-marker values. The SDK loads the selected filesystem context and owns the model/tool loop. The source label identifies the corresponding application statements."
+    },
+    {
+      "number": 8,
+      "title": "Run the loaded filesystem command hook",
+      "source": "fixtures/record-hook.cjs",
+      "code": "records.push({\n  source: \"filesystem command hook\",\n  event: input.hook_event_name,\n  user: process.env.LESSON13_FROM_USER || null,\n  project: process.env.LESSON13_FROM_PROJECT || null,\n  local: process.env.LESSON13_FROM_LOCAL || null,\n});",
+      "language": "javascript",
+      "explanation": "Only project settings register this trusted SessionStart command. Its actual private trace records harmless merged fixture flags, independent of model prose.",
+      "firstLine": 7,
+      "lastLine": 12,
+      "anchors": [
+        "event: input.hook_event_name,",
+        "records.push({",
+        "local: process.env.LESSON13_FROM_LOCAL || null,"
+      ],
+      "sourceSHA256": "577408936e5eeb62cce7140f4bc161456b83d3332c7143215e379b246f0afc9f",
+      "narration": "Step eight. Only project settings register this trusted SessionStart command. Its actual private trace records harmless merged fixture flags, independent of model prose. The source label identifies the corresponding application statements."
+    },
+    {
+      "number": 9,
+      "title": "Run the explicit programmatic callback",
+      "source": "src/agent.ts",
+      "code": "counters.callbacks++;\nemit({ type: \"callback\",\n  event: \"PreToolUse\", source: \"programmatic\"\n});",
+      "language": "typescript",
+      "explanation": "The callback passed in code guards the model Read and runs even with []. Filesystem and programmatic hooks are distinct mechanisms in the same session.",
+      "firstLine": 72,
+      "lastLine": 73,
+      "anchors": [
+        "emit({ type: \"callback\", event: \"PreToolUse\", source: \"programmatic\" });",
+        "counters.callbacks++;"
+      ],
+      "sourceSHA256": "16dab81d76a3fde588835c66b4fe6138cf609251e2ce259c56f96769e1b2d971",
+      "narration": "Step nine. The callback passed in code guards the model Read and runs even with []. Filesystem and programmatic hooks are distinct mechanisms in the same session. The source label identifies the corresponding application statements."
+    },
+    {
+      "number": 10,
+      "title": "Block tool reads of instruction files",
+      "source": "src/agent.ts",
+      "code": "return name === \"Read\"\n  && typeof input.file_path === \"string\"\n  && resolve(directories(config).cwd, input.file_path)\n    .toLowerCase() === resolve(\n      directories(config).cwd, \"data.md\"\n    ).toLowerCase();",
+      "language": "typescript",
+      "explanation": "Only data.md can be read by the model tool. The agent cannot fetch instruction files to imitate source loading. Internal configuration loading is separate from model tool calls.",
+      "firstLine": 59,
+      "lastLine": 59,
+      "anchors": [
+        "resolve(directories(config).cwd, \"data.md\").toLowerCase();"
+      ],
+      "sourceSHA256": "16dab81d76a3fde588835c66b4fe6138cf609251e2ce259c56f96769e1b2d971",
+      "narration": "Step ten. Only data.md can be read by the model tool. The agent cannot fetch instruction files to imitate source loading. Internal configuration loading is separate from model tool calls. The source label identifies the corresponding application statements."
+    },
+    {
+      "number": 11,
+      "title": "Preserve the actual typed result",
+      "source": "src/agent.ts",
+      "code": "resultText = redact(message.subtype === \"success\"\n  ? message.result : message.errors.join(\"\\n\"));",
+      "language": "typescript",
+      "explanation": "Store the actual final text and subtype. Marker extraction reflects model compliance; it is not a complete audit of all filesystem or policy inputs.",
+      "firstLine": 110,
+      "lastLine": 110,
+      "anchors": [
+        "resultText = redact(message.subtype === \"success\" ? message.result :"
+      ],
+      "sourceSHA256": "16dab81d76a3fde588835c66b4fe6138cf609251e2ce259c56f96769e1b2d971",
+      "narration": "Step eleven. Store the actual final text and subtype. Marker extraction reflects model compliance; it is not a complete audit of all filesystem or policy inputs. The source label identifies the corresponding application statements."
+    },
+    {
+      "number": 12,
+      "title": "Read the private filesystem trace",
+      "source": "src/agent.ts",
+      "code": "const filesystemHooks = JSON.parse(await readFile(\n  resolve(directories(config).cwd, \"hook-evidence.json\"),\n  \"utf8\"\n));",
+      "language": "typescript",
+      "explanation": "After closing the query, read the actual hook trace and retain callback count and completed model Read paths. Empty filesystem evidence is kept as an empty trace.",
+      "firstLine": 120,
+      "lastLine": 120,
+      "anchors": [
+        "const filesystemHooks = JSON.parse(await readFile(resolve(directories(config).cwd, \"hook-evidence.json\"), \"utf8\"));"
+      ],
+      "sourceSHA256": "16dab81d76a3fde588835c66b4fe6138cf609251e2ce259c56f96769e1b2d971",
+      "narration": "Step twelve. After closing the query, read the actual hook trace and retain callback count and completed model Read paths. Empty filesystem evidence is kept as an empty trace. The source label identifies the corresponding application statements."
+    },
+    {
+      "number": 13,
+      "title": "Format and compare independent observations",
+      "source": "src/client.ts",
+      "code": "if (e.type === \"answer\")\n  renderMarkdown($(\"answer\"), e.text);",
+      "language": "typescript",
+      "explanation": "Render actual answers through bundled Markdown parsing and sanitization. Keep options, returned markers, hook traces and directory configuration separate.",
+      "firstLine": 28,
+      "lastLine": 28,
+      "anchors": [
+        "if (e.type === \"answer\") renderMarkdown($(\"answer\"), e.text);"
+      ],
+      "sourceSHA256": "c651d0048ac9b43205ca36dbd09d60ddc4a4b32cc9cd864d3e29f912cbecf018",
+      "narration": "Step thirteen. Render actual answers through bundled Markdown parsing and sanitization. Keep options, returned markers, hook traces and directory configuration separate. The source label identifies the corresponding application statements."
+    }
+  ]
+}
